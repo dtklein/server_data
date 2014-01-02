@@ -2,6 +2,7 @@
 
 use Dancer ;
 use Dancer::Serializer::Mutable ;
+use Resources;
 use strict ;
 use warnings ;
 
@@ -35,7 +36,7 @@ get '/servers/:srv/reboot' => sub {
 get '/servers/:srv/packages' => sub{
     $srv=(param 'srv' || 'unknown') ;
     if ($srv ~~ @servers) {
-        my @pkgs=resources::get_packages($srv) ;
+        my @pkgs=Resources::get_packages($srv) ;
         return(\@pkgs) ;
     } else {
         status(404) ;
@@ -46,7 +47,7 @@ get '/servers/:srv/packages' => sub{
 get '/servers/:srv/os' => sub{
     $srv=(param 'srv' || 'unknown') ;
     if ($srv ~~ @servers) {
-        my %os=resources::get_os($srv) ;
+        my %os=Resources::get_os($srv) ;
         return(\%os) ;
     } else {
         status(404) ;

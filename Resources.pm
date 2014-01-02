@@ -6,7 +6,7 @@ use Log::Log4perl ":easy";
 use Data::Dumper ;
 use Net::Ping ;
 
-package resources ;
+package Resources ;
 
 my @Exporter ;
 our @ISA=("Exporter") ;
