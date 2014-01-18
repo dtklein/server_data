@@ -12,14 +12,11 @@ package Resources ;
 my @Exporter ;
 our @ISA=("Exporter") ;
 
-# Initialize $logger and $debug variables
-my $logger=get_logger("Resources");
-# Set level for this logger -- Should run with $INFO in real life!
-$logger->level($Log::Log4perl::DEBUG); # XXX - Running in $DEBUG mode
+my $logger;
 our $debug=0 ;
 
 my $method='' ;
-my %remote_params={} ;
+#my %remote_params={} ;
 
 ########################
 ##
@@ -65,7 +62,8 @@ push(@Exporter,"process_config") ;
 ########################
 
 sub setup() {
-	Log::Log4perl::init('./log4perl.conf') ;
+	Log::Log4perl->init('./log4perl.conf') ;
+  $logger = Log::Log4perl->get_logger("Resources");
 	process_config() ;
 }
 

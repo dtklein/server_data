@@ -12,6 +12,9 @@ my $cmd ;
 
 set serializer => 'mutable';
 
+# Run Resources setup code to configure global object, etc.
+Resources::setup();
+
 sub remote_run($$) {
     #do stuff
     #wraps pbrun, returns the output as a vector of strings
