@@ -15,6 +15,9 @@ our @ISA=("Exporter") ;
 my $logger;
 our $debug=0 ;
 
+# Define hash of options
+my %options;
+
 my $method='' ;
 #my %remote_params={} ;
 
@@ -34,15 +37,21 @@ my $method='' ;
 ########################
 
 sub process_config() {
+  my ($option, $value);
   # Read config
   $logger->info("Opening servers.config");
   open(CONFIG,'./servers.config');
   while(<CONFIG>) {
     chomp;
     $logger->debug($_);
-    #TODO Write logic to parse possible values
+    # Write logic to parse possible values
+    if ( $_ !~ m/^\s*#.*/ and $_ !~ m/^\s*$/) { # If the line does not start with a # or is blank...
+      ($option, $value) = ( $_ =~ m/^\s*(\w+)\s*=\s*(\w+)/ );
+      $options{"$option"} = $value;
+    }
   }
   close(CONFIG);
+  $logger->debug(Data::Dumper::Dumper(\%options));
 }
 
 push(@Exporter,"process_config") ;
