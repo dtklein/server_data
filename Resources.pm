@@ -2,19 +2,21 @@
 
 use strict ;
 use warnings ;
-use Log::Log4perl ":easy";
+use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper ;
 use Net::Ping ;
 
-package resources ;
+package Resources ;
 
+# Setup Perl-isms for exporting functions of this package
 my @Exporter ;
 our @ISA=("Exporter") ;
 
+my $logger;
 our $debug=0 ;
 
 my $method='' ;
-my %remote_params={} ;
+#my %remote_params={} ;
 
 ########################
 ##
@@ -32,7 +34,15 @@ my %remote_params={} ;
 ########################
 
 sub process_config() {
-	#do stuff
+  # Read config
+  $logger->info("Opening servers.config");
+  open(CONFIG,'./servers.config');
+  while(<CONFIG>) {
+    chomp;
+    $logger->debug($_);
+    #TODO Write logic to parse possible values
+  }
+  close(CONFIG);
 }
 
 push(@Exporter,"process_config") ;
@@ -52,8 +62,9 @@ push(@Exporter,"process_config") ;
 ########################
 
 sub setup() {
+	Log::Log4perl->init('./log4perl.conf') ;
+  $logger = Log::Log4perl->get_logger("Resources");
 	process_config() ;
-	Log::Log4perl::init('./log4perl.conf') ;
 }
 
 push(@Exporter,"setup") ;
