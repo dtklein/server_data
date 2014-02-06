@@ -42,15 +42,23 @@ sub process_config() {
   $logger->info("Opening servers.config");
   open(CONFIG,'./servers.config');
   while(<CONFIG>) {
-    chomp;
-    $logger->debug($_);
+    chomp; # Remove leading and trailing blanks
+    $logger->trace($_); # Write read line to trace logger
     # Write logic to parse possible values
     if ( $_ !~ m/^\s*#.*/ and $_ !~ m/^\s*$/) { # If the line does not start with a # or is blank...
-      ($option, $value) = ( $_ =~ m/^\s*(\w+)\s*=\s*(\w+)/ );
-      $options{"$option"} = $value;
+      # Parse words on either side of an equal sign as an option and value pair.
+      # ([-:\w]+) means "select any word character ([a-zA-Z0-9_]), colon, or dash, and
+      #   return it in a capture buffer. Since we have two buffers, we can store them 
+      #   at the same time
+      # Note that we require a non-blank string for the $option variable, but $value can
+      #   be blank -- it is an un-set option, and up to the user of that option to handle
+      #   reasonable defaults or blank values.
+      ($option, $value) = ( $_ =~ m/^\s*([-:\w]+)\s*=\s*([-:\w]*)/ );
+      $options{"$option"} = $value; # Store option and value into %options hash
     }
   }
   close(CONFIG);
+  # Print all options in %options hash to debug log
   $logger->debug(Data::Dumper::Dumper(\%options));
 }
 
