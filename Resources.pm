@@ -5,6 +5,7 @@ use warnings ;
 use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper ;
 use Net::Ping ;
+use Config::Auto; # Auto-parser for configuration files
 
 package Resources ;
 
@@ -16,7 +17,7 @@ my $logger;
 our $debug=0 ;
 
 # Define hash of options
-my %options;
+my $options;
 
 my $method='' ;
 #my %remote_params={} ;
@@ -37,21 +38,11 @@ my $method='' ;
 ########################
 
 sub process_config() {
-  my ($option, $value);
   # Read config
   $logger->info("Opening servers.config");
-  open(CONFIG,'./servers.config');
-  while(<CONFIG>) {
-    chomp;
-    $logger->debug($_);
-    # Write logic to parse possible values
-    if ( $_ !~ m/^\s*#.*/ and $_ !~ m/^\s*$/) { # If the line does not start with a # or is blank...
-      ($option, $value) = ( $_ =~ m/^\s*(\w+)\s*=\s*(\w+)/ );
-      $options{"$option"} = $value;
-    }
-  }
-  close(CONFIG);
-  $logger->debug(Data::Dumper::Dumper(\%options));
+  $options = Config::Auto::parse("servers.config");
+  # Print all options in %options hash to debug log
+  $logger->debug(Data::Dumper::Dumper(\$options));
 }
 
 push(@Exporter,"process_config") ;
