@@ -86,6 +86,7 @@ push(@Exporter,"setup") ;
 ########################
 
 sub remote_run($$) {
+	##TODO Write remote_run wrapper
 	
 }
 
@@ -108,6 +109,7 @@ push(@Exporter,"remote_run") ;
 ########################
 
 sub remote_run_ssh($$) {
+	##TODO Write remote_run_ssh method
 	
 }
 
@@ -134,10 +136,12 @@ push(@Exporter,"remote_run_ssh") ;
 ########################
 
 sub remote_run_powerbroker($$) {
+	# Parse parms
 	my ($remote_server, $remote_command)=@_ ;
-	my @output ;
-	my $ping=Net::Ping->new() ;
-	if($ping->ping($remote_server)) {
+	my @output ; # Define local array
+	my $ping=Net::Ping->new() ; # Prepare to ping remote, target, server to make sure it's available
+	if($ping->ping($remote_server)) { # Ping server to see if it is online
+	# Build pbrun command
 		my $pbcmd=sprintf(
 			"%s%s%s%s%s",
 			"/usr/local/bin/pbrun -b -h ",
@@ -146,10 +150,10 @@ sub remote_run_powerbroker($$) {
 			$remote_command,
 			"\' 2>/dev/null"
 		) ;
-		my $cmd_handle ;
-		if (open($cmd_handle,"$pbcmd|")) {
+		my $cmd_handle ; # Temporary variable to hold handle info
+		if (open($cmd_handle,"$pbcmd|")) { # Run command and pipe output
 			my $ready=0 ;
-			while (my $output_line=<$cmd_handle>) {
+			while (my $output_line=<$cmd_handle>) { # Loop through 
 				if ($output_line =~ m/__START_OF_RECORD_/) {
 					++$ready ;
 					next() ;
