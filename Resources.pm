@@ -196,7 +196,19 @@ push(@Exporter,"remote_run_powerbroker") ;
 ########################
 
 sub get_packages($) {
-	
+  my @packages;
+	if ( scalar `which yum` > 0 )
+  {
+    ##TODO Write Red Hat-related logic
+  }
+  elsif ( scalar `which dpkg` > 0 )
+  {
+    @packages = `dpkg --get-selections | grep install | cut -f1`;
+  }
+  else {
+    die "No recognized package manager available";
+  }
+  return @packages;
 }
 
 push(@Exporter,"get_packages") ;
