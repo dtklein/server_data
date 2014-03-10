@@ -15,11 +15,8 @@ set serializer => 'mutable';
 # Run Resources setup code to configure global object, etc.
 Resources::setup();
 
-sub remote_run($$) {
-    #do stuff
-    #wraps pbrun, returns the output as a vector of strings
-}
 
+## Removed remote_run(), since it is in the Resources module
 
 get '/servers/' => sub {
     return(\@servers) ;
@@ -28,7 +25,15 @@ get '/servers/' => sub {
 get '/servers/:srv/reboot' => sub {
     $srv=(param 'srv' || 'unknown') ;
     if ($srv ~~ @servers) {
-        remote_run($srv,"/sbin/shutdown -r now") ;
+        my $os=Resources::get_os($srv){'os'} ;
+        if($os =~ m/Linux/i) {
+            remote_run($srv,"/sbin/shutdown -r now") ;
+        } elsif($os =~ m/.+BSD/i) {
+            remote_run($srv,"/sbin/shutdown -p now") ;
+        } else {
+            status(501) ;
+            $cmd=sprintf("%s%s%s","Shutdown statements not implement for OS ",$os,".") ;
+        }
     } else {
         status(404) ;
         $cmd=sprintf("%s%s%s","Server ",$srv," not found") ;
