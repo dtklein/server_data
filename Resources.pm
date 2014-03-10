@@ -6,6 +6,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper ;
 use Net::Ping ;
 use Config::Auto; # Auto-parser for configuration files
+use DBI;
 
 package Resources ;
 
@@ -17,10 +18,13 @@ my $logger;
 our $debug=0 ;
 
 # Define hash of options
-my $options;
+my %options;
 
 my $method='' ;
 #my %remote_params={} ;
+
+# Define global DB connection parms
+my $dbh; # Handle for DBI database connection
 
 ########################
 ##
@@ -40,9 +44,11 @@ my $method='' ;
 sub process_config() {
   # Read config
   $logger->info("Opening servers.config");
-  $options = Config::Auto::parse("servers.config");
+  
+  my $opts_ref = Config::Auto::parse("servers.config");
+  %options = %{$opts_ref} ;
   # Print all options in %options hash to debug log
-  $logger->debug(Data::Dumper::Dumper(\$options));
+  $logger->debug(Data::Dumper::Dumper(\%options));
 }
 
 push(@Exporter,"process_config") ;
@@ -65,6 +71,20 @@ sub setup() {
 	Log::Log4perl->init('./log4perl.conf') ;
   $logger = Log::Log4perl->get_logger("Resources");
 	process_config() ;
+
+  ##TODO Connect to DB file
+  my $driver = $options{'DB_driver'};
+  my $database = $options{'DB_database'};
+  my $dsn = "DBI:$driver:dbname=$database";
+  $logger->debug("Driver: $driver\nDatabase: $database\nDSN: $dsn");
+  if (!($dbh = (DBI->connect($options{'DB_dsn'}
+    ,$options{'DB_userid'}
+    ,$options{'DB_password'}
+    ,{RaiseError => 1}))))
+    {
+      $logger->critical("UNABLE TO OPEN DB!!!" . \$DBI::errstr);
+      die "UNABLE TO OPEN DB!!!" . $DBI::errstr;
+    }
 }
 
 push(@Exporter,"setup") ;
@@ -234,7 +254,6 @@ push(@Exporter,"get_packages") ;
 sub get_os($) {
 	
 }
-
 push(@Exporter,"get_os") ;
 
 ########################
