@@ -216,7 +216,13 @@ push(@Exporter,"get_packages") ;
 ########################
 
 sub get_os($) {
-	
+	#### Just a stub that returns valid adata for testing
+	my $server=$_[0] ;
+	my %OS ;
+	$OS{'os'}='Linux' ;
+	$OS{'version'}='6u4' ;
+	$OS{'distribution'}='REDHAT' ;
+	return(%OS) ;
 }
 
 push(@Exporter,"get_os") ;
