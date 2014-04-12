@@ -6,6 +6,7 @@ use Log::Log4perl qw(get_logger :levels);
 use Data::Dumper ;
 use Net::Ping ;
 use Config::Auto; # Auto-parser for configuration files
+use DBI;
 
 package Resources ;
 
@@ -17,10 +18,13 @@ my $logger;
 our $debug=0 ;
 
 # Define hash of options
-my $options;
+my %options;
 
 my $method='' ;
 #my %remote_params={} ;
+
+# Define global DB connection parms
+my $dbh; # Handle for DBI database connection
 
 ########################
 ##
@@ -40,9 +44,11 @@ my $method='' ;
 sub process_config() {
   # Read config
   $logger->info("Opening servers.config");
-  $options = Config::Auto::parse("servers.config");
+  
+  my $opts_ref = Config::Auto::parse("servers.config");
+  %options = %{$opts_ref} ;
   # Print all options in %options hash to debug log
-  $logger->debug(Data::Dumper::Dumper(\$options));
+  $logger->debug(Data::Dumper::Dumper(\%options));
 }
 
 push(@Exporter,"process_config") ;
@@ -65,6 +71,20 @@ sub setup() {
 	Log::Log4perl->init('./log4perl.conf') ;
   $logger = Log::Log4perl->get_logger("Resources");
 	process_config() ;
+
+  ##TODO Connect to DB file
+  my $driver = $options{'DB_driver'};
+  my $database = $options{'DB_database'};
+  my $dsn = "DBI:$driver:dbname=$database";
+  $logger->debug("Driver: $driver\nDatabase: $database\nDSN: $dsn");
+  if (!($dbh = (DBI->connect($options{'DB_dsn'}
+    ,$options{'DB_userid'}
+    ,$options{'DB_password'}
+    ,{RaiseError => 1}))))
+    {
+      $logger->critical("UNABLE TO OPEN DB!!!" . \$DBI::errstr);
+      die "UNABLE TO OPEN DB!!!" . $DBI::errstr;
+    }
 }
 
 push(@Exporter,"setup") ;
@@ -86,6 +106,7 @@ push(@Exporter,"setup") ;
 ########################
 
 sub remote_run($$) {
+	##TODO Write remote_run wrapper
 	
 }
 
@@ -108,6 +129,7 @@ push(@Exporter,"remote_run") ;
 ########################
 
 sub remote_run_ssh($$) {
+	##TODO Write remote_run_ssh method
 	
 }
 
@@ -134,10 +156,12 @@ push(@Exporter,"remote_run_ssh") ;
 ########################
 
 sub remote_run_powerbroker($$) {
+	# Parse parms
 	my ($remote_server, $remote_command)=@_ ;
-	my @output ;
-	my $ping=Net::Ping->new() ;
-	if($ping->ping($remote_server)) {
+	my @output ; # Define local array
+	my $ping=Net::Ping->new() ; # Prepare to ping remote, target, server to make sure it's available
+	if($ping->ping($remote_server)) { # Ping server to see if it is online
+	# Build pbrun command
 		my $pbcmd=sprintf(
 			"%s%s%s%s%s",
 			"/usr/local/bin/pbrun -b -h ",
@@ -146,10 +170,10 @@ sub remote_run_powerbroker($$) {
 			$remote_command,
 			"\' 2>/dev/null"
 		) ;
-		my $cmd_handle ;
-		if (open($cmd_handle,"$pbcmd|")) {
+		my $cmd_handle ; # Temporary variable to hold handle info
+		if (open($cmd_handle,"$pbcmd|")) { # Run command and pipe output
 			my $ready=0 ;
-			while (my $output_line=<$cmd_handle>) {
+			while (my $output_line=<$cmd_handle>) { # Loop through 
 				if ($output_line =~ m/__START_OF_RECORD_/) {
 					++$ready ;
 					next() ;
@@ -192,7 +216,19 @@ push(@Exporter,"remote_run_powerbroker") ;
 ########################
 
 sub get_packages($) {
-	
+  my @packages;
+	if ( scalar `which yum` > 0 )
+  {
+    ##TODO Write Red Hat-related logic
+  }
+  elsif ( scalar `which dpkg` > 0 )
+  {
+    @packages = `dpkg --get-selections | grep install | cut -f1`;
+  }
+  else {
+    die "No recognized package manager available";
+  }
+  return @packages;
 }
 
 push(@Exporter,"get_packages") ;
@@ -224,7 +260,6 @@ sub get_os($) {
 	$OS{'distribution'}='REDHAT' ;
 	return(%OS) ;
 }
-
 push(@Exporter,"get_os") ;
 
 ########################
